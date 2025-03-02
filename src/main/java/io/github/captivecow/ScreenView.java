@@ -36,7 +36,7 @@ public class ScreenView implements Runnable {
         try {
             InputStream configPropertiesStream = Objects.requireNonNull(J2dMapRenderer.class.getResourceAsStream("/config.properties"));
             properties.load(configPropertiesStream);
-        } catch (IOException e) {
+        } catch (IOException|NullPointerException ex) {
             logger.warn("Missing config file, using default width/height for screen.");
         }
 
