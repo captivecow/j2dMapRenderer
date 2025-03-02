@@ -21,7 +21,7 @@ public class ScreenView implements Runnable {
 
     private final Logger logger = LoggerFactory.getLogger(ScreenView.class);
 
-    Properties properties;
+    private final Properties properties;
     private final JFrame frame;
     private final Canvas canvas;
     private final GridBagLayout layout;
