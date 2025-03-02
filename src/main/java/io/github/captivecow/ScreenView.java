@@ -3,9 +3,14 @@ package io.github.captivecow;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.swing.*;
-import java.awt.*;
-import java.io.*;
+import javax.swing.JFrame;
+import javax.swing.WindowConstants;
+import java.awt.Canvas;
+import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Objects;
 import java.util.Properties;
 
@@ -16,14 +21,13 @@ public class ScreenView implements Runnable {
 
     private final Logger logger = LoggerFactory.getLogger(ScreenView.class);
 
-
     Properties properties;
     private final JFrame frame;
     private final Canvas canvas;
     private final GridBagLayout layout;
     private final GridBagConstraints constraints;
 
-    public ScreenView(){
+    public ScreenView() {
         properties = new Properties();
         frame = new JFrame("j2dMapRenderer");
         canvas = new Canvas();
@@ -34,9 +38,10 @@ public class ScreenView implements Runnable {
     public void createAndShowGui() {
 
         try {
-            InputStream configPropertiesStream = Objects.requireNonNull(J2dMapRenderer.class.getResourceAsStream("/config.properties"));
+            InputStream configPropertiesStream = Objects
+                    .requireNonNull(J2dMapRenderer.class.getResourceAsStream("/config.properties"));
             properties.load(configPropertiesStream);
-        } catch (IOException|NullPointerException ex) {
+        } catch (IOException | NullPointerException ex) {
             logger.warn("Missing config file, using default width/height for screen.");
         }
 
