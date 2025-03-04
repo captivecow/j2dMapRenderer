@@ -1,5 +1,6 @@
 package io.github.captivecow;
 
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -11,6 +12,10 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.Objects;
 import java.util.Properties;
 
@@ -36,6 +41,9 @@ public class ScreenView implements Runnable {
     }
 
     public void createAndShowGui() {
+
+        TileMap map = new TileMap();
+        map.createMap("demo-map.json");
 
         try {
             InputStream configPropertiesStream = Objects
