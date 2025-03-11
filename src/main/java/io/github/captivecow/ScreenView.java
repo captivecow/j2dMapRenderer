@@ -43,12 +43,14 @@ public class ScreenView implements Runnable {
     public void createAndShowGui() {
 
         TileMap map = new TileMap();
-        map.createMap("demo-map.json");
+        map.createMap("demo-map.xml");
 
         try {
             InputStream configPropertiesStream = Objects
                     .requireNonNull(J2dMapRenderer.class.getResourceAsStream("/config.properties"));
             properties.load(configPropertiesStream);
+            configPropertiesStream.close();
+
         } catch (IOException | NullPointerException ex) {
             logger.warn("Missing config file, using default width/height for screen.");
         }
