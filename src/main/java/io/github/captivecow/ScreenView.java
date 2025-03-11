@@ -1,21 +1,15 @@
 package io.github.captivecow;
 
-import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.imageio.ImageIO;
 import javax.swing.JFrame;
 import javax.swing.WindowConstants;
-import java.awt.Canvas;
-import java.awt.Dimension;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
+import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.Arrays;
 import java.util.Objects;
 import java.util.Properties;
 
@@ -31,6 +25,7 @@ public class ScreenView implements Runnable {
     private final Canvas canvas;
     private final GridBagLayout layout;
     private final GridBagConstraints constraints;
+    private final BufferedImage tileSetImage;
 
     public ScreenView() {
         properties = new Properties();
@@ -38,6 +33,30 @@ public class ScreenView implements Runnable {
         canvas = new Canvas();
         layout = new GridBagLayout();
         constraints = new GridBagConstraints();
+        tileSetImage = loadImage("tileset.png");
+    }
+
+    public BufferedImage loadImage(String fileName) {
+        GraphicsDevice graphicsDevice = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
+        GraphicsConfiguration graphicsConfiguration = graphicsDevice.getDefaultConfiguration();
+        InputStream rawImageFile = Objects.requireNonNull(ScreenView.class.getResourceAsStream("/" + fileName));
+
+        BufferedImage rawImage;
+        try {
+            rawImage = ImageIO.read(rawImageFile);
+            rawImageFile.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        BufferedImage compatibleImage = graphicsConfiguration.createCompatibleImage(rawImage.getWidth(),
+                rawImage.getHeight(), Transparency.BITMASK);
+
+        Graphics2D graphics2D = (Graphics2D) compatibleImage.getGraphics();
+        graphics2D.drawImage(rawImage, 0, 0, null);
+        graphics2D.dispose();
+
+        return compatibleImage;
     }
 
     public void createAndShowGui() {
