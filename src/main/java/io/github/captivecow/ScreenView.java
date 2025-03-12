@@ -7,9 +7,11 @@ import javax.imageio.ImageIO;
 import javax.swing.JFrame;
 import javax.swing.WindowConstants;
 import java.awt.*;
+import java.awt.image.BufferStrategy;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashMap;
 import java.util.Objects;
 import java.util.Properties;
 
@@ -25,6 +27,7 @@ public class ScreenView implements Runnable {
     private final Canvas canvas;
     private final GridBagLayout layout;
     private final GridBagConstraints constraints;
+    private BufferStrategy bufferStrategy;
     private final BufferedImage tileSetImage;
 
     public ScreenView() {
@@ -92,6 +95,45 @@ public class ScreenView implements Runnable {
 
         frame.pack();
         frame.setVisible(true);
+
+        canvas.createBufferStrategy(2);
+        bufferStrategy = canvas.getBufferStrategy();
+
+        // i.e. rows = 1 for tiles, columns = 4
+        int columns = map.getImageWidth() / map.getTileWidth();
+        int rows = map.getImageHeight() / map.getTileHeight();
+
+        HashMap<Integer, Tile> tiles = new HashMap<>();
+
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < columns; j++) {
+
+                int startHeight = i * map.getTileHeight();
+                int startWidth = j * map.getTileWidth();
+                int endHeight = startHeight + map.getTileHeight();
+                int endWidth = startWidth + map.getTileWidth();
+
+                Tile tile = new Tile(j + 1, startWidth, startHeight, endWidth, endHeight);
+                System.out.println(tile);
+                tiles.put(tile.getId(), tile);
+            }
+        }
+
+        do {
+            do {
+                Graphics2D g2d = (Graphics2D) bufferStrategy.getDrawGraphics();
+
+                Tile tile = tiles.get(3);
+
+                g2d.drawImage(tileSetImage, 16, 16, 32, 32, tile.getBeginX(), tile.getBeginY(), tile.getEndX(),
+                        tile.getEndY(), null);
+
+                g2d.dispose();
+                System.out.println("running?");
+            } while (bufferStrategy.contentsRestored());
+            bufferStrategy.show();
+        } while (bufferStrategy.contentsLost());
+
     }
 
     @Override
