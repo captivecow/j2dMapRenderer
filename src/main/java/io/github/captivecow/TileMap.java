@@ -97,4 +97,12 @@ public class TileMap {
     public int getImageHeight() {
         return imageHeight;
     }
+
+    public int getWidth() {
+        return width;
+    }
+
+    public int getHeight() {
+        return height;
+    }
 }

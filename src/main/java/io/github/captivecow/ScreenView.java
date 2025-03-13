@@ -11,6 +11,7 @@ import java.awt.image.BufferStrategy;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Objects;
 import java.util.Properties;
@@ -99,7 +100,6 @@ public class ScreenView implements Runnable {
         canvas.createBufferStrategy(2);
         bufferStrategy = canvas.getBufferStrategy();
 
-        // i.e. rows = 1 for tiles, columns = 4
         int columns = map.getImageWidth() / map.getTileWidth();
         int rows = map.getImageHeight() / map.getTileHeight();
 
@@ -114,22 +114,45 @@ public class ScreenView implements Runnable {
                 int endWidth = startWidth + map.getTileWidth();
 
                 Tile tile = new Tile(j + 1, startWidth, startHeight, endWidth, endHeight);
-                System.out.println(tile);
                 tiles.put(tile.getId(), tile);
             }
         }
+
+        ArrayList<Integer> numberMap = map.getMap();
+        System.out.println(map.getWidth());
 
         do {
             do {
                 Graphics2D g2d = (Graphics2D) bufferStrategy.getDrawGraphics();
 
-                Tile tile = tiles.get(3);
+                for(int i = 0; i<numberMap.size(); i++){
+                    int x = i % map.getWidth();
+                    int y = i / map.getWidth();
+                    int mapStartX = x * map.getTileWidth();
+                    int mapStartY = y * map.getTileHeight();
+                    int mapEndX = x * map.getTileWidth() + map.getTileWidth();
+                    int mapEndY = y * map.getTileHeight() + map.getTileHeight();
+//                    System.out.println(x + "," + y);
+//                    System.out.println("Draw X: " + mapStartX + " to " + mapEndX);
+//                    System.out.println("Draw Y: " + mapStartY + " to " + mapEndY);
 
-                g2d.drawImage(tileSetImage, 16, 16, 32, 32, tile.getBeginX(), tile.getBeginY(), tile.getEndX(),
-                        tile.getEndY(), null);
+                    int tileNum = numberMap.get(i);
+//                    System.out.println(tileNum);
 
+                    Tile tile = tiles.get(tileNum);
+
+                    g2d.drawImage(tileSetImage,
+                            mapStartX,
+                            mapStartY,
+                            mapEndX,
+                            mapEndY,
+                            tile.getBeginX(),
+                            tile.getBeginY(),
+                            tile.getEndX(),
+                            tile.getEndY(),
+                            null);
+                }
                 g2d.dispose();
-                System.out.println("running?");
             } while (bufferStrategy.contentsRestored());
             bufferStrategy.show();
         } while (bufferStrategy.contentsLost());
