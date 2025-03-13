@@ -105,6 +105,12 @@ public class ScreenView implements Runnable {
 
         HashMap<Integer, Tile> tiles = new HashMap<>();
 
+        int widthTileAmount = 25;
+        int heightTileAmount = (int) (widthTileAmount * (Float.parseFloat(String.valueOf(screenHeight))/Float.parseFloat(String.valueOf(screenWidth))));
+        int widthSize = screenWidth/widthTileAmount;
+        int heightSize = screenHeight/heightTileAmount;
+//        System.out.println("Draw size: " + screenWidth/widthTileAmount + "," + screenHeight/heightTileAmount);
+
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < columns; j++) {
 
@@ -128,10 +134,14 @@ public class ScreenView implements Runnable {
                 for(int i = 0; i<numberMap.size(); i++){
                     int x = i % map.getWidth();
                     int y = i / map.getWidth();
-                    int mapStartX = x * map.getTileWidth();
-                    int mapStartY = y * map.getTileHeight();
-                    int mapEndX = x * map.getTileWidth() + map.getTileWidth();
-                    int mapEndY = y * map.getTileHeight() + map.getTileHeight();
+                    int mapStartX = x * widthSize;
+                    int mapStartY = y * heightSize;
+                    int mapEndX = x * widthSize + widthSize;
+                    int mapEndY = y * heightSize + heightSize;
+//                    int mapStartX = x * map.getTileWidth();
+//                    int mapStartY = y * map.getTileHeight();
+//                    int mapEndX = x * map.getTileWidth() + map.getTileWidth();
+//                    int mapEndY = y * map.getTileHeight() + map.getTileHeight();
 //                    System.out.println(x + "," + y);
 //                    System.out.println("Draw X: " + mapStartX + " to " + mapEndX);
 //                    System.out.println("Draw Y: " + mapStartY + " to " + mapEndY);
