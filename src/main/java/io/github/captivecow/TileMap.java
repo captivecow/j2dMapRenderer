@@ -11,25 +11,31 @@ import org.xml.sax.SAXException;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Objects;
 
 public class TileMap {
 
     private final Logger logger = LoggerFactory.getLogger(TileMap.class);
     private final ArrayList<Integer> map;
+    private final HashMap<Integer, Tile> tiles;
     private int width;
     private int height;
     private int tileWidth;
     private int tileHeight;
     private String imageName;
+    private BufferedImage mapTileImage;
     private int imageWidth;
     private int imageHeight;
 
-    public TileMap() {
+    public TileMap(String mapFileName) {
         map = new ArrayList<>();
+        tiles = new HashMap<>();
+        createMap(mapFileName);
     }
 
     public void createMap(String mapFileName) {
@@ -51,24 +57,41 @@ public class TileMap {
 
             NodeList nodes = mapTag.getElementsByTagName("*");
 
-            String mapLayout = "";
-
             for (int i = 0; i < nodes.getLength(); i++) {
 
                 Node nestedNode = nodes.item(i);
 
                 if (nestedNode.getNodeName().equals("data")) {
-                    mapLayout = nestedNode.getTextContent();
+
+                    String mapLayout = nestedNode.getTextContent();
+
+                    for (int j = 0; j < mapLayout.length(); j++) {
+                        if (Character.isDigit(mapLayout.charAt(j))) {
+                            map.add(Character.getNumericValue(mapLayout.charAt(j)));
+                        }
+                    }
+
                 } else if (nestedNode.getNodeName().equals("image")) {
                     imageName = nestedNode.getAttributes().getNamedItem("source").getNodeValue();
                     imageWidth = Integer.parseInt(nestedNode.getAttributes().getNamedItem("width").getNodeValue());
                     imageHeight = Integer.parseInt(nestedNode.getAttributes().getNamedItem("height").getNodeValue());
                 }
             }
+            mapTileImage = ScreenView.loadImage(imageName);
 
-            for (int i = 0; i < mapLayout.length(); i++) {
-                if (Character.isDigit(mapLayout.charAt(i))) {
-                    map.add(Character.getNumericValue(mapLayout.charAt(i)));
+            int columns = imageWidth / tileWidth;
+            int rows = imageHeight / tileHeight;
+
+            for (int i = 0; i < rows; i++) {
+                for (int j = 0; j < columns; j++) {
+
+                    int startHeight = i * tileHeight;
+                    int startWidth = j * tileWidth;
+                    int endHeight = startHeight + tileHeight;
+                    int endWidth = startWidth + tileWidth;
+
+                    Tile tile = new Tile(j + 1, startWidth, startHeight, endWidth, endHeight);
+                    tiles.put(tile.id(), tile);
                 }
             }
 
@@ -108,5 +131,13 @@ public class TileMap {
 
     public String getImageName() {
         return imageName;
+    }
+
+    public BufferedImage getMapTileImage() {
+        return mapTileImage;
+    }
+
+    public HashMap<Integer, Tile> getTiles() {
+        return tiles;
     }
 }
