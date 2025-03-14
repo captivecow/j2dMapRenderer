@@ -29,7 +29,7 @@ public class ScreenView implements Runnable {
     private final GridBagLayout layout;
     private final GridBagConstraints constraints;
     private BufferStrategy bufferStrategy;
-    private final BufferedImage tileSetImage;
+    private BufferedImage tileSetImage;
 
     public ScreenView() {
         properties = new Properties();
@@ -37,7 +37,6 @@ public class ScreenView implements Runnable {
         canvas = new Canvas();
         layout = new GridBagLayout();
         constraints = new GridBagConstraints();
-        tileSetImage = loadImage("tileset.png");
     }
 
     public BufferedImage loadImage(String fileName) {
@@ -67,6 +66,7 @@ public class ScreenView implements Runnable {
 
         TileMap map = new TileMap();
         map.createMap("demo-map.xml");
+        tileSetImage = loadImage(map.getImageName());
 
         try {
             InputStream configPropertiesStream = Objects
@@ -106,10 +106,9 @@ public class ScreenView implements Runnable {
         HashMap<Integer, Tile> tiles = new HashMap<>();
 
         int widthTileAmount = 25;
-        int heightTileAmount = (int) (widthTileAmount * (Float.parseFloat(String.valueOf(screenHeight))/Float.parseFloat(String.valueOf(screenWidth))));
-        int widthSize = screenWidth/widthTileAmount;
-        int heightSize = screenHeight/heightTileAmount;
-//        System.out.println("Draw size: " + screenWidth/widthTileAmount + "," + screenHeight/heightTileAmount);
+        int heightTileAmount = (int) (widthTileAmount * ( (float) screenHeight) / (float) screenWidth);
+        int widthSize = Math.ceilDiv(screenWidth, widthTileAmount);
+        int heightSize = Math.ceilDiv(screenHeight, heightTileAmount);
 
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < columns; j++) {
@@ -120,12 +119,11 @@ public class ScreenView implements Runnable {
                 int endWidth = startWidth + map.getTileWidth();
 
                 Tile tile = new Tile(j + 1, startWidth, startHeight, endWidth, endHeight);
-                tiles.put(tile.getId(), tile);
+                tiles.put(tile.id(), tile);
             }
         }
 
         ArrayList<Integer> numberMap = map.getMap();
-        System.out.println(map.getWidth());
 
         do {
             do {
@@ -138,16 +136,8 @@ public class ScreenView implements Runnable {
                     int mapStartY = y * heightSize;
                     int mapEndX = x * widthSize + widthSize;
                     int mapEndY = y * heightSize + heightSize;
-//                    int mapStartX = x * map.getTileWidth();
-//                    int mapStartY = y * map.getTileHeight();
-//                    int mapEndX = x * map.getTileWidth() + map.getTileWidth();
-//                    int mapEndY = y * map.getTileHeight() + map.getTileHeight();
-//                    System.out.println(x + "," + y);
-//                    System.out.println("Draw X: " + mapStartX + " to " + mapEndX);
-//                    System.out.println("Draw Y: " + mapStartY + " to " + mapEndY);
 
                     int tileNum = numberMap.get(i);
-//                    System.out.println(tileNum);
 
                     Tile tile = tiles.get(tileNum);
 
@@ -156,10 +146,10 @@ public class ScreenView implements Runnable {
                             mapStartY,
                             mapEndX,
                             mapEndY,
-                            tile.getBeginX(),
-                            tile.getBeginY(),
-                            tile.getEndX(),
-                            tile.getEndY(),
+                            tile.beginX(),
+                            tile.beginY(),
+                            tile.endX(),
+                            tile.endY(),
                             null);
                 }
                 g2d.dispose();

@@ -105,4 +105,8 @@ public class TileMap {
     public int getHeight() {
         return height;
     }
+
+    public String getImageName() {
+        return imageName;
+    }
 }
