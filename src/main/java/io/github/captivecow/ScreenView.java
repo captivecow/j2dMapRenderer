@@ -7,9 +7,12 @@ import javax.imageio.ImageIO;
 import javax.swing.JFrame;
 import javax.swing.WindowConstants;
 import java.awt.*;
+import java.awt.image.BufferStrategy;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Objects;
 import java.util.Properties;
 
@@ -25,7 +28,8 @@ public class ScreenView implements Runnable {
     private final Canvas canvas;
     private final GridBagLayout layout;
     private final GridBagConstraints constraints;
-    private final BufferedImage tileSetImage;
+    private BufferStrategy bufferStrategy;
+    private BufferedImage tileSetImage;
 
     public ScreenView() {
         properties = new Properties();
@@ -33,7 +37,6 @@ public class ScreenView implements Runnable {
         canvas = new Canvas();
         layout = new GridBagLayout();
         constraints = new GridBagConstraints();
-        tileSetImage = loadImage("tileset.png");
     }
 
     public BufferedImage loadImage(String fileName) {
@@ -63,6 +66,7 @@ public class ScreenView implements Runnable {
 
         TileMap map = new TileMap();
         map.createMap("demo-map.xml");
+        tileSetImage = loadImage(map.getImageName());
 
         try {
             InputStream configPropertiesStream = Objects
@@ -92,6 +96,67 @@ public class ScreenView implements Runnable {
 
         frame.pack();
         frame.setVisible(true);
+
+        canvas.createBufferStrategy(2);
+        bufferStrategy = canvas.getBufferStrategy();
+
+        int columns = map.getImageWidth() / map.getTileWidth();
+        int rows = map.getImageHeight() / map.getTileHeight();
+
+        HashMap<Integer, Tile> tiles = new HashMap<>();
+
+        int widthTileAmount = 25;
+        int heightTileAmount = (int) (widthTileAmount * ( (float) screenHeight) / (float) screenWidth);
+        int widthSize = Math.ceilDiv(screenWidth, widthTileAmount);
+        int heightSize = Math.ceilDiv(screenHeight, heightTileAmount);
+
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < columns; j++) {
+
+                int startHeight = i * map.getTileHeight();
+                int startWidth = j * map.getTileWidth();
+                int endHeight = startHeight + map.getTileHeight();
+                int endWidth = startWidth + map.getTileWidth();
+
+                Tile tile = new Tile(j + 1, startWidth, startHeight, endWidth, endHeight);
+                tiles.put(tile.id(), tile);
+            }
+        }
+
+        ArrayList<Integer> numberMap = map.getMap();
+
+        do {
+            do {
+                Graphics2D g2d = (Graphics2D) bufferStrategy.getDrawGraphics();
+
+                for(int i = 0; i<numberMap.size(); i++){
+                    int x = i % map.getWidth();
+                    int y = i / map.getWidth();
+                    int mapStartX = x * widthSize;
+                    int mapStartY = y * heightSize;
+                    int mapEndX = x * widthSize + widthSize;
+                    int mapEndY = y * heightSize + heightSize;
+
+                    int tileNum = numberMap.get(i);
+
+                    Tile tile = tiles.get(tileNum);
+
+                    g2d.drawImage(tileSetImage,
+                            mapStartX,
+                            mapStartY,
+                            mapEndX,
+                            mapEndY,
+                            tile.beginX(),
+                            tile.beginY(),
+                            tile.endX(),
+                            tile.endY(),
+                            null);
+                }
+                g2d.dispose();
+            } while (bufferStrategy.contentsRestored());
+            bufferStrategy.show();
+        } while (bufferStrategy.contentsLost());
+
     }
 
     @Override
