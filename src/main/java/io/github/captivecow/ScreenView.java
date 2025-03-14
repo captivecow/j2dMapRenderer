@@ -20,6 +20,8 @@ public class ScreenView implements Runnable {
 
     private final String DEFAULT_SCREEN_WIDTH = "800";
     private final String DEFAULT_SCREEN_HEIGHT = "600";
+    private final String DEFAULT_MAP = "demo-map.xml";
+    private final String DEFAULT_TILE_WIDTH="25";
 
     private final Logger logger = LoggerFactory.getLogger(ScreenView.class);
 
@@ -29,7 +31,6 @@ public class ScreenView implements Runnable {
     private final GridBagLayout layout;
     private final GridBagConstraints constraints;
     private BufferStrategy bufferStrategy;
-    private BufferedImage tileSetImage;
 
     public ScreenView() {
         properties = new Properties();
@@ -39,7 +40,7 @@ public class ScreenView implements Runnable {
         constraints = new GridBagConstraints();
     }
 
-    public BufferedImage loadImage(String fileName) {
+    public static BufferedImage loadImage(String fileName) {
         GraphicsDevice graphicsDevice = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
         GraphicsConfiguration graphicsConfiguration = graphicsDevice.getDefaultConfiguration();
         InputStream rawImageFile = Objects.requireNonNull(ScreenView.class.getResourceAsStream("/" + fileName));
@@ -64,10 +65,6 @@ public class ScreenView implements Runnable {
 
     public void createAndShowGui() {
 
-        TileMap map = new TileMap();
-        map.createMap("demo-map.xml");
-        tileSetImage = loadImage(map.getImageName());
-
         try {
             InputStream configPropertiesStream = Objects
                     .requireNonNull(J2dMapRenderer.class.getResourceAsStream("/config.properties"));
@@ -80,6 +77,10 @@ public class ScreenView implements Runnable {
 
         int screenWidth = Integer.parseInt(properties.getProperty("screen.width", DEFAULT_SCREEN_WIDTH));
         int screenHeight = Integer.parseInt(properties.getProperty("screen.height", DEFAULT_SCREEN_HEIGHT));
+        int widthTileAmount = Integer.parseInt(properties.getProperty("map.tileWidth", DEFAULT_TILE_WIDTH));
+        String mapFileName = properties.getProperty("map.name", DEFAULT_MAP);
+
+        TileMap map = new TileMap(mapFileName);
 
         canvas.setPreferredSize(new Dimension(screenWidth, screenHeight));
         canvas.setIgnoreRepaint(true);
@@ -100,28 +101,9 @@ public class ScreenView implements Runnable {
         canvas.createBufferStrategy(2);
         bufferStrategy = canvas.getBufferStrategy();
 
-        int columns = map.getImageWidth() / map.getTileWidth();
-        int rows = map.getImageHeight() / map.getTileHeight();
-
-        HashMap<Integer, Tile> tiles = new HashMap<>();
-
-        int widthTileAmount = 25;
         int heightTileAmount = (int) (widthTileAmount * ( (float) screenHeight) / (float) screenWidth);
-        int widthSize = Math.ceilDiv(screenWidth, widthTileAmount);
-        int heightSize = Math.ceilDiv(screenHeight, heightTileAmount);
-
-        for (int i = 0; i < rows; i++) {
-            for (int j = 0; j < columns; j++) {
-
-                int startHeight = i * map.getTileHeight();
-                int startWidth = j * map.getTileWidth();
-                int endHeight = startHeight + map.getTileHeight();
-                int endWidth = startWidth + map.getTileWidth();
-
-                Tile tile = new Tile(j + 1, startWidth, startHeight, endWidth, endHeight);
-                tiles.put(tile.id(), tile);
-            }
-        }
+        int widthDrawSize = Math.ceilDiv(screenWidth, widthTileAmount);
+        int heightDrawSize = Math.ceilDiv(screenHeight, heightTileAmount);
 
         ArrayList<Integer> numberMap = map.getMap();
 
@@ -132,16 +114,16 @@ public class ScreenView implements Runnable {
                 for(int i = 0; i<numberMap.size(); i++){
                     int x = i % map.getWidth();
                     int y = i / map.getWidth();
-                    int mapStartX = x * widthSize;
-                    int mapStartY = y * heightSize;
-                    int mapEndX = x * widthSize + widthSize;
-                    int mapEndY = y * heightSize + heightSize;
+                    int mapStartX = x * widthDrawSize;
+                    int mapStartY = y * heightDrawSize;
+                    int mapEndX = x * widthDrawSize + widthDrawSize;
+                    int mapEndY = y * heightDrawSize + heightDrawSize;
 
                     int tileNum = numberMap.get(i);
 
-                    Tile tile = tiles.get(tileNum);
+                    Tile tile = map.getTiles().get(tileNum);
 
-                    g2d.drawImage(tileSetImage,
+                    g2d.drawImage(map.getMapTileImage(),
                             mapStartX,
                             mapStartY,
                             mapEndX,
