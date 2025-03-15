@@ -11,17 +11,18 @@ import java.awt.image.BufferStrategy;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Objects;
 import java.util.Properties;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class ScreenView implements Runnable {
 
     private final String DEFAULT_SCREEN_WIDTH = "800";
     private final String DEFAULT_SCREEN_HEIGHT = "600";
     private final String DEFAULT_MAP = "demo-map.xml";
-    private final String DEFAULT_TILE_WIDTH="25";
+    private final String DEFAULT_TILE_WIDTH = "25";
 
     private final Logger logger = LoggerFactory.getLogger(ScreenView.class);
 
@@ -32,12 +33,27 @@ public class ScreenView implements Runnable {
     private final GridBagConstraints constraints;
     private BufferStrategy bufferStrategy;
 
+    private final ScheduledExecutorService fpsScheduler;
+    private final Runnable renderRunnable;
+    private long lastTime;
+
+    int heightTileAmount;
+    int widthDrawSize;
+    int heightDrawSize;
+    TileMap map;
+    private double accumulation;
+    private int screenFps;
+
     public ScreenView() {
         properties = new Properties();
         frame = new JFrame("j2dMapRenderer");
         canvas = new Canvas();
         layout = new GridBagLayout();
         constraints = new GridBagConstraints();
+        fpsScheduler = Executors.newScheduledThreadPool(1);
+        renderRunnable = this::render;
+        accumulation = 0.0;
+        screenFps = 0;
     }
 
     public static BufferedImage loadImage(String fileName) {
@@ -80,7 +96,11 @@ public class ScreenView implements Runnable {
         int widthTileAmount = Integer.parseInt(properties.getProperty("map.tileWidth", DEFAULT_TILE_WIDTH));
         String mapFileName = properties.getProperty("map.name", DEFAULT_MAP);
 
-        TileMap map = new TileMap(mapFileName);
+        map = new TileMap(mapFileName);
+
+        heightTileAmount = (int) (widthTileAmount * ((float) screenHeight) / (float) screenWidth);
+        widthDrawSize = Math.ceilDiv(screenWidth, widthTileAmount);
+        heightDrawSize = Math.ceilDiv(screenHeight, heightTileAmount);
 
         canvas.setPreferredSize(new Dimension(screenWidth, screenHeight));
         canvas.setIgnoreRepaint(true);
@@ -101,17 +121,32 @@ public class ScreenView implements Runnable {
         canvas.createBufferStrategy(2);
         bufferStrategy = canvas.getBufferStrategy();
 
-        int heightTileAmount = (int) (widthTileAmount * ( (float) screenHeight) / (float) screenWidth);
-        int widthDrawSize = Math.ceilDiv(screenWidth, widthTileAmount);
-        int heightDrawSize = Math.ceilDiv(screenHeight, heightTileAmount);
+        lastTime = System.nanoTime();
+        fpsScheduler.scheduleAtFixedRate(renderRunnable, 0, 16, TimeUnit.MILLISECONDS);
+    }
 
-        ArrayList<Integer> numberMap = map.getMap();
+    @Override
+    public void run() {
+        createAndShowGui();
+    }
+
+    public void render(){
+
+        long currentTime = System.nanoTime();
+        double currentDelta = (currentTime - lastTime) / 1000000000.0;
+        lastTime = currentTime;
+        accumulation += currentDelta;
+
+        if(accumulation >= 1.0){
+            accumulation = 0.0;
+            screenFps = (int) Math.round(1/currentDelta);
+        }
 
         do {
             do {
                 Graphics2D g2d = (Graphics2D) bufferStrategy.getDrawGraphics();
 
-                for(int i = 0; i<numberMap.size(); i++){
+                for (int i = 0; i < map.getMap().size(); i++) {
                     int x = i % map.getWidth();
                     int y = i / map.getWidth();
                     int mapStartX = x * widthDrawSize;
@@ -119,30 +154,23 @@ public class ScreenView implements Runnable {
                     int mapEndX = x * widthDrawSize + widthDrawSize;
                     int mapEndY = y * heightDrawSize + heightDrawSize;
 
-                    int tileNum = numberMap.get(i);
+                    int tileNum = map.getMap().get(i);
 
                     Tile tile = map.getTiles().get(tileNum);
 
-                    g2d.drawImage(map.getMapTileImage(),
-                            mapStartX,
-                            mapStartY,
-                            mapEndX,
-                            mapEndY,
-                            tile.beginX(),
-                            tile.beginY(),
-                            tile.endX(),
-                            tile.endY(),
-                            null);
+                    g2d.drawImage(map.getMapTileImage(), mapStartX, mapStartY, mapEndX, mapEndY, tile.beginX(),
+                            tile.beginY(), tile.endX(), tile.endY(), null);
                 }
+
+
+                g2d.setColor(Color.YELLOW);
+                g2d.fillRect(0, 0, 50, 15);
+                g2d.setColor(Color.BLACK);
+                g2d.drawString("FPS: " + screenFps, 4, 11);
+
                 g2d.dispose();
             } while (bufferStrategy.contentsRestored());
             bufferStrategy.show();
         } while (bufferStrategy.contentsLost());
-
-    }
-
-    @Override
-    public void run() {
-        createAndShowGui();
     }
 }
