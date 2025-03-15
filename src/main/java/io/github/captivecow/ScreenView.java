@@ -114,6 +114,7 @@ public class ScreenView implements Runnable {
         frame.setIgnoreRepaint(true);
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         frame.setResizable(false);
+        frame.setBackground(Color.BLACK);
 
         frame.pack();
         frame.setVisible(true);
