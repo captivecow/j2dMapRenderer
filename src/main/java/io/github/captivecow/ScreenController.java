@@ -1,14 +1,15 @@
 package io.github.captivecow;
 
 import javax.swing.SwingUtilities;
+
 public class ScreenController {
     private final ScreenView screen;
 
-    public ScreenController(){
+    public ScreenController() {
         screen = new ScreenView();
     }
 
-    public void start(){
+    public void start() {
         SwingUtilities.invokeLater(screen);
     }
 }
