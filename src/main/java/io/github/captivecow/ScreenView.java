@@ -39,13 +39,11 @@ public class ScreenView implements Runnable {
     private final Runnable renderRunnable;
     private long lastTime;
 
-    int heightTileAmount;
-    int widthDrawSize;
-    int heightDrawSize;
     TileMap map;
     private double accumulation;
     private int screenFps;
     private InputController inputController;
+    private Camera camera;
 
     public ScreenView() {
         properties = new Properties();
@@ -102,9 +100,7 @@ public class ScreenView implements Runnable {
 
         map = new TileMap(mapFileName);
 
-        heightTileAmount = (int) (widthTileAmount * ((float) screenHeight) / (float) screenWidth);
-        widthDrawSize = Math.ceilDiv(screenWidth, widthTileAmount);
-        heightDrawSize = Math.ceilDiv(screenHeight, heightTileAmount);
+        camera = new Camera(map, screenWidth, screenHeight, widthTileAmount);
 
         canvas.setPreferredSize(new Dimension(screenWidth, screenHeight));
         canvas.setIgnoreRepaint(true);
@@ -145,34 +141,36 @@ public class ScreenView implements Runnable {
 
         if (accumulation >= 1.0) {
             accumulation = 0.0;
-            screenFps = (int) Math.round(1 / currentDelta);
+            screenFps = (int) Math.round(1/currentDelta);
+        }
+
+        if(inputController.isPressingRight()){
+            camera.setX(
+                    (int) (camera.getX() + Math.ceil(50*currentDelta))
+            );
+        } else if (inputController.isPressingLeft()) {
+            camera.setX(
+                    (int) (camera.getX() + Math.floor(-50*currentDelta))
+            );
+        } else if (inputController.isPressingUp()) {
+            camera.setY(
+                    (int) (camera.getY() + Math.floor(-50*currentDelta))
+            );
+        } else if (inputController.isPressingDown()) {
+            camera.setY(
+                    (int) (camera.getY() + Math.ceil(50*currentDelta))
+            );
         }
 
         do {
             do {
                 Graphics2D g2d = (Graphics2D) bufferStrategy.getDrawGraphics();
-
-                for (int i = 0; i < map.getMap().size(); i++) {
-                    int x = i % map.getWidth();
-                    int y = i / map.getWidth();
-                    int mapStartX = x * widthDrawSize;
-                    int mapStartY = y * heightDrawSize;
-                    int mapEndX = x * widthDrawSize + widthDrawSize;
-                    int mapEndY = y * heightDrawSize + heightDrawSize;
-
-                    int tileNum = map.getMap().get(i);
-
-                    Tile tile = map.getTiles().get(tileNum);
-
-                    g2d.drawImage(map.getMapTileImage(), mapStartX, mapStartY, mapEndX, mapEndY, tile.beginX(),
-                            tile.beginY(), tile.endX(), tile.endY(), null);
-                }
-
+                g2d.clearRect(0, 0, 800, 600);
+                camera.render(g2d);
                 g2d.setColor(Color.YELLOW);
                 g2d.fillRect(0, 0, 50, 15);
                 g2d.setColor(Color.BLACK);
                 g2d.drawString("FPS: " + screenFps, 4, 11);
-
                 g2d.dispose();
             } while (bufferStrategy.contentsRestored());
             bufferStrategy.show();
