@@ -50,10 +50,10 @@ public class Camera {
                 g2d.drawImage(map.getMapTileImage(), mapStartX-this.x, mapStartY-this.y, mapEndX, mapEndY, tile.beginX(),
                         tile.beginY(), tile.endX(), tile.endY(), null);
             }
-            else {
-                System.out.println("Doesn't intersect - x:" + mapStartX + " to " + mapEndX + " y: " + mapStartY + " to " + mapEndY);
-                System.out.println("Camera is - x:" + this.x + " to " + (this.x+screenWidth) + " y: " + this.y + " to " + (this.y+screenHeight));
-            }
+//            else {
+//                System.out.println("Doesn't intersect - x:" + mapStartX + " to " + mapEndX + " y: " + mapStartY + " to " + mapEndY);
+//                System.out.println("Camera is - x:" + this.x + " to " + (this.x+screenWidth) + " y: " + this.y + " to " + (this.y+screenHeight));
+//            }
         }
     }
 

@@ -141,7 +141,7 @@ public class ScreenView implements Runnable {
 
         if (accumulation >= 1.0) {
             accumulation = 0.0;
-            screenFps = (int) Math.round(1/currentDelta);
+            screenFps = (int) Math.round(1 / currentDelta);
         }
 
         if(inputController.isPressingRight()){
