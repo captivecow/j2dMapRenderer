@@ -7,6 +7,8 @@ import javax.imageio.ImageIO;
 import javax.swing.JFrame;
 import javax.swing.WindowConstants;
 import java.awt.*;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.image.BufferStrategy;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
@@ -43,6 +45,7 @@ public class ScreenView implements Runnable {
     TileMap map;
     private double accumulation;
     private int screenFps;
+    private InputController inputController;
 
     public ScreenView() {
         properties = new Properties();
@@ -51,6 +54,7 @@ public class ScreenView implements Runnable {
         layout = new GridBagLayout();
         constraints = new GridBagConstraints();
         fpsScheduler = Executors.newScheduledThreadPool(1);
+        inputController = new InputController();
         renderRunnable = this::render;
         accumulation = 0.0;
         screenFps = 0;
@@ -104,6 +108,7 @@ public class ScreenView implements Runnable {
 
         canvas.setPreferredSize(new Dimension(screenWidth, screenHeight));
         canvas.setIgnoreRepaint(true);
+        canvas.addKeyListener(inputController);
 
         frame.setLayout(layout);
 
@@ -131,16 +136,16 @@ public class ScreenView implements Runnable {
         createAndShowGui();
     }
 
-    public void render(){
+    public void render() {
 
         long currentTime = System.nanoTime();
         double currentDelta = (currentTime - lastTime) / 1000000000.0;
         lastTime = currentTime;
         accumulation += currentDelta;
 
-        if(accumulation >= 1.0){
+        if (accumulation >= 1.0) {
             accumulation = 0.0;
-            screenFps = (int) Math.round(1/currentDelta);
+            screenFps = (int) Math.round(1 / currentDelta);
         }
 
         do {
@@ -162,7 +167,6 @@ public class ScreenView implements Runnable {
                     g2d.drawImage(map.getMapTileImage(), mapStartX, mapStartY, mapEndX, mapEndY, tile.beginX(),
                             tile.beginY(), tile.endX(), tile.endY(), null);
                 }
-
 
                 g2d.setColor(Color.YELLOW);
                 g2d.fillRect(0, 0, 50, 15);
